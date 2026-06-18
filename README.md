@@ -1,8 +1,3 @@
-Here is a comprehensive, production-ready `README.md` file designed to serve as the single source of truth for your front-end and back-end teams. It includes explicit full URLs, authentic headers, request bodies, and JSON responses for every specified endpoint, along with added logical endpoints to ensure full end-to-end functionality.
-
----
-
-# README.md
 
 # 🏥 MediCore API Documentation
 
