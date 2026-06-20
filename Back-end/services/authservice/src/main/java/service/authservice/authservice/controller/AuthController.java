@@ -1,9 +1,13 @@
 package service.authservice.authservice.controller;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import service.authservice.authservice.config.JwtUtils;
 import service.authservice.authservice.dto.*;
 import service.authservice.authservice.service.AuthService;
 
@@ -36,21 +40,40 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/logout")
+   @Autowired
+private JwtUtils jwtUtils; // <-- Inject your JwtUtils here if it isn't already
+
+@PostMapping("/logout")
 public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String tokenHeader) {
     try {
-        // Extract the token from the "Bearer <token>" header
+        // 1. Check if the header format is correct
         String token = null;
         if (tokenHeader != null && tokenHeader.startsWith("Bearer ")) {
             token = tokenHeader.substring(7);
         }
 
-        if (token == null) {
+        if (token == null || token.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(AuthResponse.builder().success(false).message("Missing token.").build());
         }
 
-        // Pass it to the service layer
+        // 2. CRITICAL: Validate the token using JwtUtils
+        // (If your method has a different name, like validateToken(token), use that)
+        try {
+            // This will parse the token. If the signature is wrong or expired, it throws an exception.
+            String email = jwtUtils.extractEmail(token); 
+            
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(AuthResponse.builder().success(false).message("Invalid token claims.").build());
+            }
+        } catch (Exception jwtException) {
+            // Captures expired, forged, or malformed tokens
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AuthResponse.builder().success(false).message("Invalid or expired token.").build());
+        }
+
+        // 3. If valid, proceed with logout logic
         authService.logout(token);
 
         return ResponseEntity.ok(
