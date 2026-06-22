@@ -1,45 +1,65 @@
 // src/App.jsx
 //
-// The only file that knows about EVERY page — that's intentional. Routing
-// configuration is a legitimate reason for one file to import a lot of
-// things; it's still single-responsibility because its one job is
-// "map URLs to pages", nothing else.
+// Two things happen here:
+// 1. Routes are declared — every page is registered here with its
+//    ProtectedRoute wrapper specifying which role(s) can access it.
+// 2. The root div gets a role class (e.g. "role-doctor") derived from
+//    the logged-in user's JWT. This is what makes every button, badge,
+//    and accent line switch color automatically — one class, whole app.
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-import Login from "./pages/Login";
+import Home   from "./pages/Home";
+import Login  from "./pages/Login";
 import Signup from "./pages/Signup";
 import DoctorDirectory from "./pages/patient/DoctorDirectory";
 
 // TODO (Person A): import BookAppointment, Prescriptions, Chat, BloodDonor
 // TODO (Person B): import DoctorDashboard, WritePrescription, PatientHistory, ApproveDoctors
-// TODO (Person C): import Medicines
+// TODO (Person C): import Medicines, Chat
+
+// Inner wrapper reads the auth user and applies the role class.
+// It's a separate component so it can call useAuth() (which needs
+// to be inside <AuthProvider>).
+function RoleWrapper({ children }) {
+  const { user } = useAuth();
+  const roleClass = user ? `role-${user.role}` : "";
+  return <div className={roleClass}>{children}</div>;
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+        <RoleWrapper>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/"       element={<Home />}   />
+            <Route path="/login"  element={<Login />}  />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* Patient routes */}
-          <Route
-            path="/patient"
-            element={
-              <ProtectedRoute allowedRoles={["patient"]}>
-                <DoctorDirectory />
-              </ProtectedRoute>
-            }
-          />
+            {/* Patient routes */}
+            <Route
+              path="/patient"
+              element={
+                <ProtectedRoute allowedRoles={["patient"]}>
+                  <DoctorDirectory />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* TODO: add /doctor, /pharmacist, /admin routes the same way,
-              each wrapped in ProtectedRoute with its own allowedRoles */}
-
-          <Route path="/" element={<Login />} />
-        </Routes>
+            {/* TODO: Add routes below following the same pattern:
+                <Route path="/doctor" element={
+                  <ProtectedRoute allowedRoles={["doctor"]}>
+                    <DoctorDashboard />
+                  </ProtectedRoute>
+                } />
+                ... and so on for /pharmacist, /admin
+            */}
+          </Routes>
+        </RoleWrapper>
       </BrowserRouter>
     </AuthProvider>
   );

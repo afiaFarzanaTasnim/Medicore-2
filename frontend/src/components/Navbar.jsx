@@ -1,10 +1,15 @@
 // src/components/Navbar.jsx
-//
-// SRP: only renders top navigation + logout button. Doesn't know about
-// routing logic beyond linking to known paths, doesn't fetch data.
 
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/medicoreLogo.png";
+
+const ROLE_LABELS = {
+  patient:    "Patient",
+  doctor:     "Doctor",
+  pharmacist: "Pharmacist",
+  admin:      "Admin",
+};
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -16,19 +21,36 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="navbar navbar-expand navbar-dark bg-primary px-3">
-      <Link className="navbar-brand" to="/">MediCore</Link>
-      <div className="ms-auto d-flex align-items-center gap-3">
-        {user && (
-          <>
-            <span className="text-white small">
-              {user.name} ({user.role})
-            </span>
-            <button className="btn btn-sm btn-light" onClick={handleLogout}>
-              Logout
-            </button>
-          </>
-        )}
+    <nav className="mc-nav">
+      <div className="container mc-nav-inner">
+
+        {/* Logo — image replaces the placeholder "M" mark */}
+        <Link to={user ? `/${user.role}` : "/"} className="mc-logo">
+          <img
+            src={logo}
+            alt="MediCore — Healthcare, Coordinated."
+            style={{ height: 100, width: "auto"}}
+          />
+        </Link>
+
+        {/* Right side */}
+        <div className="mc-nav-actions">
+          {user ? (
+            <>
+              <span className="mc-nav-user">{user.name}</span>
+              <span className="mc-nav-role">{ROLE_LABELS[user.role] ?? user.role}</span>
+              <button className="btn btn-ghost btn-sm" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login"  className="btn btn-ghost btn-sm">Login</Link>
+              <Link to="/signup" className="btn btn-primary btn-sm">Sign up</Link>
+            </>
+          )}
+        </div>
+
       </div>
     </nav>
   );
