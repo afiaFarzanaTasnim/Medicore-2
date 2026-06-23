@@ -6,10 +6,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class BloodbankserviceApplicationTests {
 
-	@Test // new demo comment
+	@Test 
 	void contextLoads() {
 
 	}
-	// add demo comment
-
 }
