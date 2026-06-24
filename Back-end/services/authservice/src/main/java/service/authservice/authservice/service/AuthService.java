@@ -3,10 +3,14 @@ package service.authservice.authservice.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import service.authservice.authservice.config.JwtUtils;
 import service.authservice.authservice.dto.*;
 import service.authservice.authservice.model.User;
 import service.authservice.authservice.repository.UserRepository;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +19,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final RestTemplate restTemplate;
 
     public AuthResponse register(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -32,11 +37,27 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
+        if ("doctor".equalsIgnoreCase(savedUser.getRole())) {
+            createDoctorProfileInUserService(savedUser.getUserId());
+        }
+
         return AuthResponse.builder()
                 .success(true)
                 .message("User registered successfully.")
                 .data(mapToUserResponseData(savedUser))
                 .build();
+    }
+
+    private void createDoctorProfileInUserService(String userId) {
+        try {
+            restTemplate.postForEntity(
+                    "http://localhost:8002/api/v1/internal/doctor-profile/" + userId,
+                    null,
+                    Void.class
+            );
+        } catch (Exception e) {
+            System.err.println("Could not create doctor profile for userId " + userId + ": " + e.getMessage());
+        }
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -70,7 +91,24 @@ public class AuthService {
                 .updatedAt(user.getUpdatedAt())
                 .build();
     }
+    public AuthResponse getUserById(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+        return AuthResponse.builder()
+                .success(true)
+                .data(mapToUserResponseData(user))
+                .build();
+    }
+
     public void logout(String token) {
-    System.out.println("Token successfully invalidated on logout: " + token);
-}
+        System.out.println("Token successfully invalidated on logout: " + token);
+    }
+
+    public Map<String, Long> getUserRoleCounts() {
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("patients", userRepository.countByRoleIgnoreCase("patient"));
+        counts.put("doctors", userRepository.countByRoleIgnoreCase("doctor"));
+        counts.put("pharmacists", userRepository.countByRoleIgnoreCase("pharmacist"));
+        return counts;
+    }
 }

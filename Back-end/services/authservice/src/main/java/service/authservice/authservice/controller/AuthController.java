@@ -13,7 +13,7 @@ import service.authservice.authservice.service.AuthService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
+@RequiredArgsConstructor // create constractor for final field
 public class AuthController {
 
     private final AuthService authService;
@@ -43,8 +43,18 @@ public class AuthController {
     @Autowired
      private JwtUtils jwtUtils;
 
-@PostMapping("/logout")
-public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String tokenHeader) {
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<AuthResponse> getUserById(@PathVariable String userId) {
+        try {
+            return ResponseEntity.ok(authService.getUserById(userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(AuthResponse.builder().success(false).message(e.getMessage()).build());
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String tokenHeader) {
     try {
         // 1. Check if the header format is correct
         String token = null;
