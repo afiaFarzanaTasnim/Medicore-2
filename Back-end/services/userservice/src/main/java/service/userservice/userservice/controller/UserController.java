@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// Required Servlet & HTTP Core Imports for JWT forwarding
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,9 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.beans.factory.annotation.Autowired;
 
-// Service Data Imports
+import jakarta.servlet.http.HttpServletRequest;
 import service.userservice.userservice.context.UserContext;
 import service.userservice.userservice.model.DoctorProfile;
 import service.userservice.userservice.model.PharmacistProfile;
@@ -93,7 +90,7 @@ public class UserController {
         String specFilter = normalizeFilter(specialization);
         String locFilter = normalizeFilter(location);
 
-        //List<DoctorProfile> doctors = doctorRepo.searchApprovedDoctors(specFilter, locFilter);
+        List<DoctorProfile> doctors = doctorRepo.searchApprovedDoctors(specFilter, locFilter);
         List<Map<String, Object>> enrichedDoctors = enrichDoctors(doctors);
 
         Map<String, Object> filtersApplied = new HashMap<>();
@@ -108,9 +105,9 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    /*private boolean isNotPatient() {
+    private boolean isNotPatient() {
         return !"patient".equalsIgnoreCase(UserContext.getRole());
-    }*/
+    }
 
     private String normalizeFilter(String value) {
         if (value == null || value.isBlank()) {
@@ -122,10 +119,10 @@ public class UserController {
     private List<Map<String, Object>> enrichDoctors(List<DoctorProfile> doctors) {
         String jwtToken = null;
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        /*if (attributes != null) {
+        if (attributes != null) {
             HttpServletRequest request = attributes.getRequest();
             jwtToken = request.getHeader("Authorization");
-        }*/
+        }
         HttpHeaders headers = new HttpHeaders();
         if (jwtToken != null) {
             headers.set("Authorization", jwtToken);
