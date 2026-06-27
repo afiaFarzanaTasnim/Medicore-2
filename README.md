@@ -258,6 +258,42 @@ When the token is decoded on either the client or server, it yields the followin
 
 ```
 
+#### 🗓️ View My Appointments
+
+* **URL:** `http://localhost:3000/api/v1/patient/myallappointments`
+* **Method:** `GET`
+* **Auth Required:** Yes (Patient Only)
+* **Description:** Returns all booked appointments for the authenticated patient, including queue serial number, appointment date, doctor name, department, and status.
+
+**Success Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "appointmentId": "14",
+      "doctorName": "Dr. Sarah Jenkins",
+      "department": "Cardiology",
+      "date": "2026-06-25",
+      "serialNo": 14,
+      "serial_no": 14,
+      "status": "CONFIRMED"
+    },
+    {
+      "appointmentId": "9",
+      "doctorName": "Dr. John Doe",
+      "department": "Neurology",
+      "date": "2026-06-19",
+      "serialNo": 9,
+      "serial_no": 9,
+      "status": "COMPLETED"
+    }
+  ]
+}
+
+```
+
 #### 📄 View Self Prescriptions
 
 * **URL:** `http://localhost:3000/api/v1/patient/prescriptions`

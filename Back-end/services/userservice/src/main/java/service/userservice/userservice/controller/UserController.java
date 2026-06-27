@@ -26,7 +26,7 @@ import service.userservice.userservice.model.DoctorProfile;
 import service.userservice.userservice.model.PharmacistProfile;
 import service.userservice.userservice.repository.DoctorProfileRepository;
 import service.userservice.userservice.repository.PharmacistProfileRepository;
-import org.springframework.web.HttpMediaTypeException;
+
 
 @RestController 
 @RequestMapping("/api/v1/user")

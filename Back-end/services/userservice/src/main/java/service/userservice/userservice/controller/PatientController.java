@@ -1,14 +1,21 @@
 package service.userservice.userservice.controller;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -17,8 +24,6 @@ import service.userservice.userservice.context.UserContext;
 import service.userservice.userservice.model.Appointment;
 import service.userservice.userservice.model.DoctorProfile;
 import service.userservice.userservice.model.Prescription;
-import java.util.List;
-import java.util.stream.Collectors;
 import service.userservice.userservice.repository.AppointmentRepository;
 import service.userservice.userservice.repository.DoctorProfileRepository;
 import service.userservice.userservice.repository.PrescriptionRepository;
@@ -122,6 +127,23 @@ public class PatientController {
                 "message", "Server Error: " + e.getMessage()
             ));
         }
+    }
+
+    @GetMapping("/myallappointments")
+    public ResponseEntity<?> getMyAllAppointments() {
+        if (isNotPatient()) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "message", "Forbidden: Only patients can access this resource."
+            ));
+        }
+
+        List<Map<String, Object>> appointments = apptRepo.findByPatientId(UserContext.getUserId())
+                .stream()
+                .map(this::mapPatientAppointmentResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(Map.of("success", true, "data", appointments));
     }
 
     @GetMapping("/prescriptions")
