@@ -19,6 +19,7 @@ public class Appointment {
     private String patientName;
     private String patientPhone;
     private String doctorId;
+    private String doctorName;
     
     // THIS IS THE EXACT LINE THAT FIXES THE DATABASE CRASH 👇
     @Column(name = "appointment_date")

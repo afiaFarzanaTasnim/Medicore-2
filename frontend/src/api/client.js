@@ -24,6 +24,23 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+export const DEFAULT_NETWORK_ERROR = "Network error. Please try again.";
+
+/**
+ * Pulls a human-friendly message out of whatever apiRequest threw.
+ * - If the backend gave us a message (e.g. "Donor not found"), use that.
+ * - Else fall back to err.message (set by apiRequest from response.status).
+ * - Else fall back to the generic network error string.
+ */
+export function getErrorMessage(err, fallback = DEFAULT_NETWORK_ERROR) {
+  if (!err) return fallback;
+  return (
+    err.payload?.message ||
+    err.message ||
+    fallback
+  );
+}
+
 /**
  * OCP (Open/Closed): this function is generic and CLOSED for modification —
  * we never edit it to add a new feature. It's OPEN for extension: every new

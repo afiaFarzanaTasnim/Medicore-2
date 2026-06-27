@@ -35,8 +35,30 @@ export const ENDPOINTS = {
   doctorPrescriptionsByPatient: (patientId) => `/doctor/prescriptions/patient/${patientId}`,
   doctorAppointments: "/doctor/appointments",
 
-  // Admin
+  // Admin — Doctor approvals
   approveDoctor: (doctorId) => `/admin/approve-doctor/${doctorId}`,
+  disapproveDoctor: (doctorId) => `/admin/disapprove-doctor/${doctorId}`,
+  adminDoctors: "/admin/doctors",
+  adminDoctorsPending: "/admin/doctors/pending",
+  adminDoctorsApproved: "/admin/doctors/approved",
+
+  // Admin — User management
+  adminUsers: "/admin/users",
+  adminChangeRole: (userId) => `/admin/users/${userId}/role`,
+  adminDeleteUser: (userId) => `/admin/users/${userId}`,
+
+  // Admin — Dashboard
+  adminStats: "/user/admin/dashboard/stats",
+
+  // Admin — Blood bank (donor oversight)
+  adminDonors: (bloodGroup) => {
+    const bg = bloodGroup && bloodGroup !== "All" ? `?bloodGroup=${encodeURIComponent(bloodGroup)}` : "";
+    return `/bloodbank/admin/donors${bg}`;
+  },
+  adminDeleteDonor: (bloodBankId) => `/bloodbank/admin/donors/${bloodBankId}`,
+
+  // Admin — Medicine catalog (oversight)
+  adminDeleteMedicine: (medicineId) => `/admin/medicines/${medicineId}`,
 
   // Pharmacist
   medicines: "/pharmacist/medicines",

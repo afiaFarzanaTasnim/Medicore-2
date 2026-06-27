@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Navbar from "../../components/Navbar";
-import { apiRequest } from "../../api/client";
+import { apiRequest, getErrorMessage } from "../../api/client";
 import { ENDPOINTS } from "../../api/endpoints";
 import { useAuth } from "../../context/AuthContext";
 
@@ -12,6 +12,7 @@ export default function BloodDonor() {
   const [lastdate, setLastdate] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerAlert, setRegisterAlert] = useState({ type: "", message: "" });
+  const [donorProfile, setDonorProfile] = useState(null);
 
   const [bloodGroup, setBloodGroup] = useState("");
   const [donors, setDonors] = useState([]);
@@ -38,6 +39,14 @@ export default function BloodDonor() {
         auth: true,
       });
       if (res.success) {
+        setDonorProfile(res.data ?? {
+          bloodBankId: "—",
+          name: user?.name ?? "Donor",
+          contactNo: user?.contactNo ?? "—",
+          donorId: user?.id ?? user?._id ?? "—",
+          lastdate,
+          bloodgroup: user?.blood_group ?? "—",
+        });
         setRegisterAlert({ type: "success", message: res.message ?? "Donor profile registered successfully!" });
         setLastdate("");
       } else {
@@ -61,14 +70,21 @@ export default function BloodDonor() {
 
     try {
       const res = await apiRequest(ENDPOINTS.donorsByGroup(bloodGroup), { auth: true });
-      if (res.success) setDonors(res.data ?? []);
-      else setSearchError(res.message ?? "Failed to find donors.");
-    } catch {
-      setSearchError("Network error. Please try again.");
+      if (res?.success) setDonors(res.data ?? []);
+      else setSearchError(res?.message ?? "Failed to find donors.");
+    } catch (err) {
+      setSearchError(getErrorMessage(err));
     } finally {
       setSearchLoading(false);
       setSearchedOnce(true);
     }
+  }
+
+  function handleBloodGroupChange(e) {
+    setBloodGroup(e.target.value);
+    setDonors([]);
+    setSearchError("");
+    setSearchedOnce(false);
   }
 
   return (
@@ -91,7 +107,12 @@ export default function BloodDonor() {
           </button>
           <button
             className={`tab-btn ${activeTab === "search" ? "active" : ""}`}
-            onClick={() => setActiveTab("search")}
+            onClick={() => {
+              setActiveTab("search");
+              setSearchError("");
+              setDonors([]);
+              setSearchedOnce(false);
+            }}
           >
             🔍 Find Donors
           </button>
@@ -99,42 +120,85 @@ export default function BloodDonor() {
 
         {activeTab === "register" && (
           <div className="tab-panel form-max-width">
-            {user?.blood_group && (
-              <div className="donor-info-strip">
-                <span className="donor-info-strip__icon">🩸</span>
-                <div>
-                  <p className="donor-info-strip__label">Your Blood Group</p>
-                  <p className="donor-info-strip__value">{user.blood_group}</p>
+            {donorProfile ? (
+              <>
+                <div className="donor-info-strip">
+                  <span className="donor-info-strip__icon">🩸</span>
+                  <div>
+                    <p className="donor-info-strip__label">Donor Status</p>
+                    <p className="donor-info-strip__value">Registered</p>
+                  </div>
                 </div>
-              </div>
+
+                {registerAlert.message && (
+                  <div className={`alert ${registerAlert.type === "success" ? "alert-success" : "alert-error"}`}>
+                    {registerAlert.message}
+                  </div>
+                )}
+
+                <div className="mc-table-wrap" style={{ marginTop: 8 }}>
+                  <table className="mc-table">
+                    <thead>
+                      <tr>
+                        <th>Blood Bank ID</th>
+                        <th>Name</th>
+                        <th>Blood Group</th>
+                        <th>Contact</th>
+                        <th>Last Donated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{donorProfile.bloodBankId}</td>
+                        <td>{donorProfile.name}</td>
+                        <td><span className="badge role-patient">{donorProfile.bloodgroup}</span></td>
+                        <td>{donorProfile.contactNo}</td>
+                        <td>{donorProfile.lastdate ? new Date(donorProfile.lastdate).toLocaleDateString() : "—"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <>
+                {user?.blood_group && (
+                  <div className="donor-info-strip">
+                    <span className="donor-info-strip__icon">🩸</span>
+                    <div>
+                      <p className="donor-info-strip__label">Your Blood Group</p>
+                      <p className="donor-info-strip__value">{user.blood_group}</p>
+                    </div>
+                  </div>
+                )}
+
+                {registerAlert.message && (
+                  <div className={`alert ${registerAlert.type === "success" ? "alert-success" : "alert-error"}`}>
+                    {registerAlert.message}
+                  </div>
+                )}
+
+                <form onSubmit={handleRegister}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="lastdate">Last Donation Date</label>
+                    <input
+                      id="lastdate"
+                      type="date"
+                      className="form-control"
+                      value={lastdate}
+                      onChange={(e) => setLastdate(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                    />
+                    <p className="form-hint">
+                      Enter when you last donated blood, or today if this is your first time.
+                    </p>
+                  </div>
+
+                  <button type="submit" className="btn btn-primary" disabled={registerLoading}>
+                    {registerLoading ? "Registering…" : "Register as Donor"}
+                  </button>
+                </form>
+              </>
             )}
-
-            {registerAlert.message && (
-              <div className={`alert ${registerAlert.type === "success" ? "alert-success" : "alert-error"}`}>
-                {registerAlert.message}
-              </div>
-            )}
-
-            <form onSubmit={handleRegister}>
-              <div className="form-group">
-                <label className="form-label" htmlFor="lastdate">Last Donation Date</label>
-                <input
-                  id="lastdate"
-                  type="date"
-                  className="form-control"
-                  value={lastdate}
-                  onChange={(e) => setLastdate(e.target.value)}
-                  max={new Date().toISOString().split("T")[0]}
-                />
-                <p className="form-hint">
-                  Enter when you last donated blood, or today if this is your first time.
-                </p>
-              </div>
-
-              <button type="submit" className="btn btn-primary" disabled={registerLoading}>
-                {registerLoading ? "Registering…" : "Register as Donor"}
-              </button>
-            </form>
           </div>
         )}
 
@@ -147,7 +211,7 @@ export default function BloodDonor() {
                   id="blood_group_select"
                   className="form-control"
                   value={bloodGroup}
-                  onChange={(e) => setBloodGroup(e.target.value)}
+                  onChange={handleBloodGroupChange}
                 >
                   <option value="">— Select blood group —</option>
                   {BLOOD_GROUPS.map((bg) => (
@@ -160,7 +224,18 @@ export default function BloodDonor() {
               </button>
             </form>
 
-            {searchError && <div className="alert alert-error">{searchError}</div>}
+            {searchError && (
+              <div className="alert alert-error" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <span>{searchError}</span>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => bloodGroup && handleSearch({ preventDefault: () => {} })}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
             {searchedOnce && !searchLoading && !searchError && (
               <>

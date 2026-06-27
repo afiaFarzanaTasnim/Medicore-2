@@ -15,18 +15,25 @@ const ROLE_LINKS = {
   patient: [
     { to: "/patient",              label: "Dashboard" },
     { to: "/patient/book",         label: "Book" },
+    { to: "/patient/appointments", label: "Appointments" },
     { to: "/patient/prescriptions",label: "Prescriptions" },
     { to: "/patient/chat",         label: "Chat" },
     { to: "/patient/donors",       label: "Blood Donors" },
   ],
   doctor: [
-    { to: "/doctor", label: "Dashboard" },
+    { to: "/doctor", label: "Appointments" },
+    { to: "/doctor/chat", label: "Chat" },
+    { to: "/doctor/profile", label: "Profile" },
   ],
   pharmacist: [
     { to: "/pharmacist", label: "Dashboard" },
+    { to: "/pharmacist/profile", label: "Profile" },
   ],
   admin: [
-    { to: "/admin", label: "Dashboard" },
+    { to: "/admin",          label: "Dashboard" },
+    { to: "/admin/doctors",  label: "Doctors" },
+    { to: "/admin/users",    label: "Users" },
+    { to: "/admin/donors",   label: "Donors" },
   ],
 };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
-import { apiRequest } from "../../api/client";
+import { apiRequest, getErrorMessage } from "../../api/client";
 import { ENDPOINTS } from "../../api/endpoints";
 
 const INITIAL_FORM = {
@@ -40,20 +40,25 @@ export default function BookAppointment() {
 
     setLoading(true);
     try {
+      const selectedDoctor = doctors.find((d) => d.doctorId === form.doctor_id);
+      const body = {
+        ...form,
+        doctor_name: selectedDoctor?.name ?? null,
+      };
       const res = await apiRequest(ENDPOINTS.appointments, {
         method: "POST",
-        body: form,
+        body,
         auth: true,
       });
-      if (res.success) {
+      if (res?.success) {
         setBookedData(res.data);
         setAlert({ type: "success", message: res.message ?? "Appointment booked successfully!" });
         setForm(INITIAL_FORM);
       } else {
-        setAlert({ type: "error", message: res.message ?? "Failed to book appointment." });
+        setAlert({ type: "error", message: res?.message ?? "Failed to book appointment." });
       }
-    } catch {
-      setAlert({ type: "error", message: "Network error. Please try again." });
+    } catch (err) {
+      setAlert({ type: "error", message: getErrorMessage(err) });
     } finally {
       setLoading(false);
     }
